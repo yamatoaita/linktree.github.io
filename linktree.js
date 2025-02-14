@@ -330,6 +330,7 @@ class Application{
 
     async printFirebaseInfo(){
         const INFO = await this.FIREBASE_APP.downloadData("data/info");
+        console.log("is it visible?");
         console.log(INFO);
     }
 
