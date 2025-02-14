@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="linktree.css">
+        <title>東北福祉大学　ハッシュタグ事のXリンクツリー</title>
+    </head>
+
+    <body>
+        <header class="header">
+            <img  class="header__logo"                            src="header.png">
+            <img  class="header__btn"       id="headerSettingBtn" src="btn.png" >
+            <span class="header__user-name" id="headerUserName"></span>
+            <div  class="menu"              id="menu">
+
+                <button type="button"  class="menu__btn" id="menuBtnLogin">ログイン</button> 
+                <button type="button"  class="menu__btn" id="menuBtnSetting">設定</button> 
+            </div>
+            
+        </header>
+
+
+        <form class="form-radiobtn">
+            <fieldset>
+                <legend class="form__legend">リンクの設定</legend>
+               
+                <div class="form__explain">Xで検索する範囲を選択してください。</div>
+               
+                <label>
+                    <input id="radioAll"        type="radio" name="option" value="all"                > 全期間
+                </label>
+                
+                <label>
+                    <input id="radioSince"      type="radio" name="option" value="since~"             > ある期間以降(20xx/m/n～)
+                </label>
+            
+                <label>
+                    <input id="radioUntil"      type="radio" name="option" value="~until"             > ある期間以前(～20xx/m/n)
+                </label>
+
+                <label>
+                    <input id="radioSinceUntil" type="radio" name="option" value="since~until" checked> ある期間から、ある期間まで(20xx/m/n～20xx/M/N)
+                </label>
+
+                <div class="form-date">
+                    <br>
+                    <input type="date" class="form-date__input" id="dateSince" >
+                    <span class="form-date__explain" id="explainDateSince">から</span>
+                    <input type="date" class="form-date__input" id="dateUntil">
+                    <span class="form-date__explain" id="explainDateUntil">まで</span>
+
+                    <input type="button" class="form-date__enter" id="enterBtn" value="確定">
+                </div>
+
+                
+
+            </fieldset>
+          </form>
+          
+
+
+        <table class="table">
+            <thead class="column">
+                <tr class="column-cell">
+                    <th class="column-cell__title" >ハッシュタグ名</th>
+                    <th class="column-cell__title" >Xへのリンク</th>
+                </tr>
+            </thead>
+            <tbody class="row">
+                <tr class="row-cell">
+                    <th     class="row-cell__title" id="hashtag1Title">#春から東北福祉大学</th>
+                    <td     class="row-cell__data"  id="hashtag1Value">
+                        <a  class="row-cell__a"     id="hashtag1LINK" target="_blank"></a>
+                    </td>
+                </tr>
+                <tr class="row-cell">
+                    <th     class="row-cell__title" id="hashtag2Title">#春から東北福祉大</th>
+                    <td     class="row-cell__data"  id="hashtag2Value">
+                        <a  class="row-cell__a"     id="hashtag2LINK" target="_blank"></a>
+                    </td>
+                </tr>
+                <tr class="row-cell">
+                    <th     class="row-cell__title" id="hashtag3Title">#春からTFU</th>
+                    <td     class="row-cell__data"  id="hashtag3Value">
+                        <a  class="row-cell__a"     id="hashtag3LINK" target="_blank"></a>
+                    </td>
+                </tr>
+                <tr class="row-cell">
+                    <th     class="row-cell__title" id="hashtag4Title">#春からtfu</th>
+                    <td     class="row-cell__data"  id="hashtag4Value">
+                        <a  class="row-cell__a"     id="hashtag4LINK" target="_blank"></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <script type = "module" src="linktree.js"></script>
+    </body>
+
+</html>
+
+
+<!--
+#春から東北福祉大学
+#春から東北福祉大
+#春からTFU
+#春からtfu
+
+-->

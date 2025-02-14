@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="linktree.css">
+        <title>東北福祉大学　ハッシュタグ事のXリンクツリー</title>
+    </head>
+
+    <body>
+        <header class="header">
+            <img  class="header__logo"                            src="header.png">  
+            <span class="header__user-name" id="headerUserName"></span>
+            <img  class="header__btn"       id="headerHomeBtn" src="home.png" >
+         
+        </header>
+
+        <div class="setting" id="setting">
+            <div class="setting-title">
+                <span class="setting-title__title">設定</span>
+            </div>
+            <div class="setting__search-date" id="settingSearchDate">
+                <div class="setting-search-date">
+
+                    <label  class="setting-search-date__label" id="comboLabel">検索する日程範囲:</label>
+                    <select class="setting-search-date__combo" id="combo">
+                        <option value="all|all">全期間</option>
+                        <option value="today|since~until">今日の投稿のみ</option>
+                        <option value="week|since~until">一週間の投稿のみ</option>
+                        <option value="month|since~until">一か月の投稿のみ</option>
+                        <option value="custom|since~until">ユーザー設定</option>
+                    </select>
+
+                    <div class="setting-search-date__custom" id="comboCustom">
+        
+                        <input type="date" class="form-date__input" id="dateSince" >
+                        <span class="form-date__explain" id="explainDateSince">から</span>
+                        <input type="date" class="form-date__input" id="dateUntil">
+                        <span class="form-date__explain" id="explainDateUntil">まで</span>
+
+                    </div>
+
+                    <button class="setting-search-date__btn-enter" id="btnSearchDate">検索する日程範囲を更新する</button>
+                </div>
+            </div>
+                
+
+            <div class="setting__hashtags" id="settingHashtags">
+                <label  class="setting-search-date__label" id="comboLabel">検索するハッシュタグ:</label>
+                
+                <table class="setting-table">
+                    <thead class="setting-column">
+                        <tr class="setting-column-cell">
+                            <th class="setting-column-cell__title" >ハッシュタグ名</th>
+                        </tr>
+                    </thead>
+                    <tbody class="setting-row">
+                        <tr class="setting-row-cell">
+                            <th     class="setting-row-cell__title" id="hashtag1Title" contenteditable="true">#春から東北福祉大学</th>
+                            <td     class="setting-row-cell__data"  id="hashtag1Value" contenteditable="true">
+                                <a  class="setting-row-cell__a"     id="hashtag1LINK"  contenteditable="true" target="_blank"></a>
+                            </td>
+                        </tr>
+                        <tr class="setting-row-cell">
+                            <th     class="setting-row-cell__title" id="hashtag2Title" contenteditable="true">#春から東北福祉大</th>
+                            <td     class="setting-row-cell__data"  id="hashtag2Value" contenteditable="true">
+                                <a  class="setting-row-cell__a"     id="hashtag2LINK"  contenteditable="true" target="_blank"></a>
+                            </td>
+                        </tr>
+                        <tr class="setting-row-cell">
+                            <th     class="setting-row-cell__title" id="hashtag3Title" contenteditable="true">#春からTFU</th>
+                            <td     class="setting-row-cell__data"  id="hashtag3Value" contenteditable="true">
+                                <a  class="setting-row-cell__a"     id="hashtag3LINK"  contenteditable="true" target="_blank"></a>
+                            </td>
+                        </tr>
+                        <tr class="setting-row-cell">
+                            <th     class="setting-row-cell__title" id="hashtag4Title" contenteditable="true">#春からtfu</th>
+                            <td     class="setting-row-cell__data"  id="hashtag4Value" contenteditable="true">
+                                <a  class="setting-row-cell__a"     id="hashtag4LINK"  contenteditable="true" target="_blank"></a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <button class="setting-search-date__btn-enter" id="btnSearcHashtags">検索するハッシュタグを登録する</button>
+            </div>
+
+        </div>
+
+        <script type = "module" src="linktree.js"></script>
+    </body>
+
+</html>
+
+
+<!--
+#春から東北福祉大学
+#春から東北福祉大
+#春からTFU
+#春からtfu
+
+-->
+
