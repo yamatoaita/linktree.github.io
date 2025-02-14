@@ -252,6 +252,7 @@ uploadExpiringCookie関数は仕様上、Dictionary型を渡すことを推奨�
 
 class Application{
     constructor(){
+        console.log("in constructor");
         //➀Elementを取得
         this.INPUT_SINCE          = document.getElementById("dateSince");
         this.SPAN_SINCE           = document.getElementById("explainDateSince");
@@ -271,7 +272,7 @@ class Application{
         this.INDEX_HTML = "https://yamatoaita.github.io/linktree/";
         this.LOGIN_HTML = "https://yamatoaita.github.io/linktree/login.html";
         this.SETTING_HTML = "https://yamatoaita.github.io/linktree/setting.html";
-
+        console.log("set menay things");
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyBYf6N1S-oMoHvJFGmLvlJ9t1WBsiSy2XQ",
             authDomain: "x-linktree.firebaseapp.com",
