@@ -2,15 +2,17 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebas
 import { getDatabase, ref, push,  get, set, onChildAdded, remove, onChildRemoved } 
 from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
 
-export class FirebaseFunctions{
+class FirebaseFunctions{
     constructor(FIREBASE_CONFIG){              
         // Initialize Firebase
         const APP = initializeApp(FIREBASE_CONFIG); 
+        console.log("in FireFunc init app");
         this.DB = getDatabase(APP);
+        console.log("get data base");
         this.DB_REF_COOKIE =  ref(this.DB, `data/cookie`);
     
         this.__initTipFlg();
-        
+        console.log("fin all fireFunc init");
     }
     
     uploadExpiringCookie(data, EXPIRE_AFTER_X_TIME = 3000){
@@ -282,6 +284,7 @@ class Application{
             messagingSenderId: "207042084073",
             appId: "1:207042084073:web:e305b706b65b4d6e718478"
         };
+        console.log("definate firebase config");
         this.FIREBASE_APP = new FirebaseFunctions(FIREBASE_CONFIG);
         console.log("installed firebase app");
         this.executeByURL();
