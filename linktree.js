@@ -275,7 +275,16 @@ class Application{
         this.LOGIN_HTML = "https://yamatoaita.github.io/linktree/login.html";
         this.SETTING_HTML = "https://yamatoaita.github.io/linktree/setting.html";
         console.log("set menay things");
-        const FIREBASE_CONFIG = "empty";
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyBYf6N1S-oMoHvJFGmLvlJ9t1WBsiSy2XQ",
+            authDomain: "x-linktree.firebaseapp.com",
+            databaseURL: "https://x-linktree-default-rtdb.firebaseio.com",
+            projectId: "x-linktree",
+            storageBucket: "x-linktree.firebasestorage.app",
+            messagingSenderId: "207042084073",
+            appId: "1:207042084073:web:e305b706b65b4d6e718478"
+        };
+        console.log(FIREBASE_CONFIG);
         console.log("definate firebase config");
         this.FIREBASE_APP = new FirebaseFunctions(FIREBASE_CONFIG);
         console.log("installed firebase app");
