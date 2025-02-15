@@ -283,8 +283,9 @@ class Application{
             appId: "1:207042084073:web:e305b706b65b4d6e718478"
         };
         this.FIREBASE_APP = new FirebaseFunctions(FIREBASE_CONFIG);
-        
+        console.log("installed firebase app");
         this.executeByURL();
+        console.log("fin exexute by url");
     }
     //--------------------------------------------------------------------------
     //[common]
