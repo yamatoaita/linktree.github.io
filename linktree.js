@@ -302,7 +302,7 @@ class Application{
         this.printFirebaseInfo();
         console.log("done print firebase info");
         
-        if(page == "linktree" || page == "index"){
+        if(page == "https://yamatoaita.github.io/linktree/" || page == "index"){
     
             console.log("in execute By URL IF clause. bef all func");
             this.setLastUsedOption();
