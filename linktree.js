@@ -294,14 +294,17 @@ class Application{
     //--------------------------------------------------------------------------
     //[common]
     executeByURL(){
+        console.log("in execute by url");
         const URL = window.location.href;
         var page = URL.split("/").pop();
         page = page.replace(".html","");
 
         this.printFirebaseInfo();
+        console.log("done print firebase info");
         
         if(page == "linktree" || page == "index"){
-            console.log("in execute By URL. bef all func");
+    
+            console.log("in execute By URL IF clause. bef all func");
             this.setLastUsedOption();
 
             console.log("fin set last used option");
