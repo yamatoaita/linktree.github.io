@@ -299,7 +299,7 @@ class Application{
         var page = URL.split("/").pop();
         page = page.replace(".html","");
 
-        this.printFirebaseInfo();
+        //this.printFirebaseInfo();
         console.log("done print firebase info");
         
         if(page == "linktree" || page == "index"){
