@@ -296,13 +296,12 @@ class Application{
     executeByURL(){
         console.log("in execute by url");
         const URL = window.location.href;
-        var page = URL.split("/").pop();
-        page = page.replace(".html","");
+        
 
         this.printFirebaseInfo();
         console.log("done print firebase info");
-        alert(page);
-        if(page == "https://yamatoaita.github.io/linktree/" || page == "index"){
+        alert(URL);
+        if(URL == "https://yamatoaita.github.io/linktree/" ){
     
             console.log("in execute By URL IF clause. bef all func");
             this.setLastUsedOption();
@@ -321,11 +320,11 @@ class Application{
 
             this.applyLoginIfNotExpire();
             console.log("fin apply login if not expire")
-        }else if(page == "login"){
+        }else if(URL == "https://yamatoaita.github.io/linktree/login"){
             this.setLoginEvent();
             this.setHomeBtnEvent();
 
-        }else if(page == "setting"){
+        }else if(URL == "https://yamatoaita.github.io/linktree/setting"){
             this.setComboboxEvent();
             this.setBtnsEvent();
             this.setHomeBtnEvent();
