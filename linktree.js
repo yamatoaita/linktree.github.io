@@ -271,9 +271,9 @@ class Application{
         //このbooleanを使用して、サイトがログイン状態か
         //ログアウト状態かを管理したい。
 
-        this.INDEX_HTML = "https://yamatoaita.github.io/linktree/";
-        this.LOGIN_HTML = "https://yamatoaita.github.io/linktree/login.html";
-        this.SETTING_HTML = "https://yamatoaita.github.io/linktree/setting.html";
+        this.INDEX_HTML = "https://yamatoaita.github.io/linktree.github.io/";
+        this.LOGIN_HTML = "https://yamatoaita.github.io/linktree.github.io/login.html";
+        this.SETTING_HTML = "https://yamatoaita.github.io/linktree.github.io/setting.html";
         console.log("set menay things");
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyBYf6N1S-oMoHvJFGmLvlJ9t1WBsiSy2XQ",
@@ -300,9 +300,9 @@ class Application{
 
         this.printFirebaseInfo();
         console.log("done print firebase info");
-        alert(URL);
-        alert("url 1");
-        if(URL == "https://yamatoaita.github.io/linktree.github.io/" ){
+        
+        
+        if(URL == this.INDEX_HTML ){
     
             console.log("in execute By URL IF clause. bef all func");
             this.setLastUsedOption();
@@ -321,11 +321,11 @@ class Application{
 
             this.applyLoginIfNotExpire();
             console.log("fin apply login if not expire")
-        }else if(URL == "https://yamatoaita.github.io/linktree/login"){
+        }else if(URL == this.LOGIN_HTML){
             this.setLoginEvent();
             this.setHomeBtnEvent();
 
-        }else if(URL == "https://yamatoaita.github.io/linktree/setting"){
+        }else if(URL == this.SETTING_HTML){
             this.setComboboxEvent();
             this.setBtnsEvent();
             this.setHomeBtnEvent();
