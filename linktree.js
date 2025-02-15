@@ -301,6 +301,7 @@ class Application{
         this.printFirebaseInfo();
         console.log("done print firebase info");
         alert(URL);
+        alert("url");
         if(URL == "https://yamatoaita.github.io/linktree/" ){
     
             console.log("in execute By URL IF clause. bef all func");
