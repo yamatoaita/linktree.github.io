@@ -1,4 +1,4 @@
-{FirebaseFunctions} from "./utils.js";
+import {FirebaseFunctions} from "https://raw.githubusercontent.com/yamatoaita/yamato-utils/refs/heads/main/utils.js";
 
 class Application{
     constructor(){
