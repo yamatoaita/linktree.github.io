@@ -419,8 +419,11 @@ class Application{
     //[common]
     executeByURL(){
         const URL = window.location.href;
+        console.log(`it is 2nd line of exexuteByURL, and URL is ${URL},HomePageURL is ${this.HtmlFunction.returnHomePageURL()},\n
+        and login page is ${this.HtmlFunction.composeURLbyPageTitle("login")}, and setting page is ${this.HtmlFunction.composeURLbyPageTitle("setting")}`);
         
         if(URL == this.HtmlFunction.returnHomePageURL()){
+            console.log("in home page conditinoal branch; start");
             this.setLastUsedOption();
 
             this.setRadioEvent();//ラジオボタンの選択状況に応じて、elementを表示させる
@@ -434,7 +437,7 @@ class Application{
             this.setMenuBtnsEvent();
 
             this.applyLoginIfNotExpire();
-
+            console.log("in home page conditinoal branch; done");
         }else if(URL == this.HtmlFunction.composeURLbyPageTitle("login")){
             this.setLoginEvent();
             this.setHomeBtnEvent();
