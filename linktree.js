@@ -370,7 +370,7 @@ class HtmlFunction{
 
 
         if(URL.match(/github/)){
-            var homePageURL =  URL.match(/https:\/{2}yamatoaita.github.io\/[\w-]*\.github\.io/)[0];
+            var homePageURL =  URL.match(/https:\/{2}yamatoaita.github.io\/[\w-]*\.github\.io/\/)[0];
             return homePageURL;
         }else{
             var homePageURL = this.composeURLbyPageTitle(homePageTitle,URL);
