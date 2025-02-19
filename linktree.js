@@ -1,8 +1,388 @@
-import {FirebaseFunctions} from "https://raw.githubusercontent.com/yamatoaita/yamato-utils/refs/heads/main/utils.js";
+
+// ----- utils.js START -----
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+import { getDatabase, ref, push,  get, set, onChildAdded, remove, onChildRemoved }
+from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+
+class FirebaseFunctions{
+    constructor(FIREBASE_CONFIG){
+        // Initialize Firebase
+        const APP = initializeApp(FIREBASE_CONFIG);
+        this.DB = getDatabase(APP);
+        this.DB_REF_COOKIE =  ref(this.DB, `data/cookie`);
+
+        this.__initTipFlg();
+
+    }
+
+    uploadExpiringCookie(data, EXPIRE_AFTER_X_TIME = 3000){
+        var expire = new Date();
+        expire.setTime(expire.getTime()+EXPIRE_AFTER_X_TIME);
+
+        const DB_REF_DATA =  ref(this.DB, "data/cookie");
+
+        //この関数を使用するとき、様々なデータを扱うだろう
+        //例えばログイン状態を一時的に保存するために使われる。
+        //他には、遷移先のページで実行させたい動作を保存するかもしれない。
+        //(例：一度ログイン画面を経由して、設定画面に移動したい時にGogingToSetting:trueのように使う)
+        //様々な種類のデータを扱うため、object型で  data.isloginとかdata.isGoingSettingのように
+        //使ったほうが　コードが読みやすくなると考えた。そのため、dictionary型を推奨することを
+        //console logで表示させる。バグのもとになりそうだからだ。
+        if(typeof(data)=="object" && Array.isArray(data) == false){
+            //推奨されるデータ型です
+        }else{
+            this.__showCaution("uploadExpiringCookie",data);
+        }
+
+
+        const LIST_DATA = [expire,data];
+        const JSON_DATA = JSON.stringify(LIST_DATA);
+
+        set(DB_REF_DATA,JSON_DATA);
+    }
+
+
+    uploadData(rawPath,data){
+        rawPath = `data/${rawPath}`;
+        var reviewdPath = this.__reviewPath(rawPath);
+
+        const DB_REF_DATA =  ref(this.DB, reviewdPath);
+        if(typeof(data)=="string"){
+            data = ["json",data];
+            //JSONにするには、配列でなければならない。
+            //そのため、0番目に識別子jsonをつけて配列にする
+        }
+        const JSON_DATA = JSON.stringify(data);
+        set(DB_REF_DATA,JSON_DATA);
+    }
+
+    async downloadExpiringCookie(){
+        this.__tellTips("downloadData");
+
+        const DB_REF_DATA = ref(this.DB,"data/cookie");
+        try {
+            const snapshot = await get(DB_REF_DATA); // await で結果を待機
+            if (snapshot.exists()) { // パスワードが登録されていた場合
+                const JSON_DATA = snapshot.val(); // データを格納
+
+                if(typeof(JSON_DATA)=="string"){
+                    var parsedData = JSON.parse(JSON_DATA);
+                }else{
+                    var parsedData = JSON_DATA;
+                }
+
+                let EXPIRE_DATE = new Date(parsedData[0]); // cookie_dateを格納
+                let CURRENT_DATE = new Date(); // 現在の時刻を取得
+
+                // cookie_dateから現在時刻までの経過時間をミリ秒で取得
+                let ELAPSED_TIME    = EXPIRE_DATE    - CURRENT_DATE;
+                // 1000ms(  valid)  = 12:00:03       -  12:00:02
+                //    1ms(  valid)  = 12:00:03:0000  -  12:00:02:999
+                //    0ms(invalid)  = 12:00:03       -  12:00:03
+                //-2000ms(invalid)  = 12:00:03       -  12:00:05
+
+                if (ELAPSED_TIME > 0) {
+                    this.__uploadAndResetInfo();
+                    const DICT_DATA =  parsedData[1];
+                    return DICT_DATA; // 取得したデータを返す
+                } else {
+                    //ログイン情報の有効期限が切れた場合は、falseを返す
+                    this.uploadData("data/info",`Cookieの有効期限が切れています。
+有効期限：EXPIRE_DATE
+現在時刻：18
+時差：${ELAPSED_TIME/1000}秒`)
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    return false;
+                }
+
+
+
+            } else {
+                console.log('No data available');
+                return null;
+            }
+        } catch (error) {
+            this.__alertMessage(error);
+            console.error('Error getting data:', error);
+            throw error; // エラーを呼び出し元に伝える
+        }
+    }
+
+    async downloadData(rawPath) {
+        this.__tellTips("downloadData");
+
+        rawPath = `data/${rawPath}`;
+        var reviewedPath = this.__reviewPath(rawPath);
+        const DB_REF_DATA = ref(this.DB, reviewedPath);
+
+        try {
+            const snapshot = await get(DB_REF_DATA); // await で結果を待機
+            if (snapshot.exists()) { // パスワードが登録されていた場合
+                const JSON_DATA = snapshot.val(); // データを格納
+
+                if(typeof(JSON_DATA)=="string"){
+                    var parsedData = JSON.parse(JSON_DATA);
+                }else{
+                    var parsedData = JSON_DATA;
+                }
+
+
+
+
+                if(Array.isArray(parsedData)){
+                    if(parsedData.length >0 && parsedData[0]==="json"){
+                        //配列が空だと次の処理が undefined errorとなる。
+                        //これを防ぐために parsedData.length>0の条件をはさむ。
+                        parsedData = parsedData[1];
+                        //JSONは配列やobject型じゃなければパースできない。
+                        //そのため、listに直してからパースしている。
+                        //データを取り出す時には、元のデータ（文字列や数値）のみ抽出して返す
+                    }
+                }
+
+                return parsedData; // 取得したデータを返す
+            } else {
+                console.log('No data available');
+                return null;
+            }
+        } catch (error) {
+            this.__alertMessage(error);
+            console.error('Error getting data:', error);
+            throw error; // エラーを呼び出し元に伝える
+        }
+    }
+
+    __uploadAndResetInfo(){
+        this.uploadData("data/info","");
+    }
+
+    __reviewPath(PATH){
+        return PATH.replace(/(?:\/?data\/)+/, "data/");
+        //:  / /は正規表現を宣言
+        //:  /は/のエスケープ文字
+    }
+
+    __alertMessage(INFO){
+        alert(`Error: yamatoaita@gmail.comにこの文章をお知らせください。
+Error info : INFO`)
+    }
+
+    __initTipFlg(){
+        this.isShowTip = {
+                            "downloadData" : true
+
+                        }
+    }
+
+    __tellTips(METHOD){
+        const GREEN = "color:green";
+        const RED = "color:red";
+        const BLUE = "color:blue";
+        const NORMAL = "color:black;font-weight:normal"
+        const BOLD  ="font-weight:bold`"
+
+        if(METHOD == "downloadData" && this.isShowTip["downloadData"]){
+            this.isShowTip["downloadData"] = false;
+
+            console.log(
+`
+============================================================================
+|                       %cTip of [downloadData]%c:                             |
+|--------------------------------------------------------------------------|
+|downloadDataメソッドを実行する際は以下のように使います。                  |
+|--------------------------------------------------------------------------|
+|    class ClassName{                                                      |
+|        constructor(){                                                    |
+|            ・・・処理・・・                                              |
+|            this.init(); // データ取得後に実行させたいコードは            |
+|                        // init関数にくくる。                             |
+|        }                                                                 |
+|        %casync%c init(){                                                     |
+|            const DATA = %cawait%c this.FIREBASE_APP.downloadData("cookie");  |
+|            console.log(データが取得後に表示されます‘＄{DATA}‘)         |
+|            console.log("このログはその後に表示されます")                 |
+|        }                                                                 |
+|    }                                                                     |
+|--------------------------------------------------------------------------|
+|                %cReturnで値を取得したい場合の記載例%c:                       |
+|--------------------------------------------------------------------------|
+|    %casync%c exampleFunction(){                                              |
+|          const VALUE = %cawait%c this.returnFunction();                      |
+|    }                                                                     |
+|    %casync%c returnFunction(){                                               |
+|        const RETURN_VALUE = %cawait%c this.FIREBASE_APP.downloadData("path");|
+|        return RETURN_VALUE;                                              |
+|    }                                                                     |
+|--------------------------------------------------------------------------|
+|                %caddEventListenerで行う場合の記載例%c:                       |
+|--------------------------------------------------------------------------|
+|    setBtnEvent(){                                                        |
+|        const BTN = document.getElementById("btn");                       |
+|        BTN.addEventListener("click", %casync%c ()=>{                         |
+|            const VALUE = %cawait%c this.returnFunction();                    |
+|        })                                                                |
+|    }                                                                     |
+============================================================================
+    ` ,`GREEN;BOLD`,`NORMAL`,
+    `BLUE;BOLD`,`NORMAL`,
+    `BLUE;BOLD`,`NORMAL`,
+
+    `GREEN;BOLD`,`NORMAL`,
+    `BLUE;BOLD`,`NORMAL`,
+    `BLUE;BOLD`,`NORMAL`,
+    `BLUE;BOLD`,`NORMAL`,
+    `BLUE;BOLD`,`NORMAL`,
+
+    `GREEN;BOLD`,`NORMAL`,
+    `BLUE;BOLD`,`NORMAL`,
+    `BLUE;BOLD`,`NORMAL`
+   )
+        }
+    }
+
+    __showCaution(FUNCTION_NAME,ITEM){
+        var stack = new Error().stack.replace("Error","");
+        stack = stack.replace(/^\s*at FirebaseFunctions.*$/gm, "");
+
+
+        if(FUNCTION_NAME=="uploadExpiringCookie"){
+            alert(`注意 : アップロードしようとしているものはDictionary型ではありません。
+
+uploadExpiringCookie関数は仕様上、Dictionary型を渡すことを推奨します。
+
+渡された値：ITEM   データ型：${typeof(ITEM)}
+
+現在の行番号：stack`)
+        }
+    }
+
+}
+
+class HtmlFunction{
+    constructor(){
+
+    }
+    extractHtmlTitle(htmlLink){
+        //https:yamatoaita.github.io/page-tile.github.io/
+        //http://127.0.0.1:5500/parent-file-name/page-title.html
+        //https://yamatoaita.github.io/scheduler.github.io/adjust.html?user_index=user
+
+        htmlLink = htmlLink.replace(/\/$/,"");
+        //https:yamatoaita.github.io/page-title.github.io
+        //http://127.0.0.1:5500/parent-file-name/page-title.html
+        //https://yamatoaita.github.io/scheduler.github.io/adjust.html?user_index=user
+
+        var configured_item = htmlLink.split("/").pop();
+        //page-title.github.io
+        //page-title.html
+        //adjust.html?user_index=user
+
+        const HTML_TITLE = configured_item.match(/^(.+)(?:\.github\.io|\.html)/)[1];
+        //正規表現の解説
+        //^(.+)で文字の頭にある何文字かの文字列をキャプチャする
+        //?:で「これは非キャプチャグループです。ORのために使っています」と宣言
+        //(?:  \.github\.io | \.html)で.github.ioか.htmlを指定している。
+        //最後、[1]とすることで一番目のキャプチャ内容を取得する
+
+        //結果の例
+        //page-title
+        //page-title
+        //adjust
+
+        return HTML_TITLE;
+    }
+
+    /**
+     * @description -ローカル環境とgithub.pageではurlの形式が異なります。そのため、ページ事に遷移先のURLを別処理で作成する必要があるのです。
+     * @param {*} URL -URL:window.location.hrefがデフォルト値
+     * @param {*} PAGE_TITLE -PAGE_TITLE:遷移先のページ名を指定
+     * @returns 指定したページ名を含むURLリンクを返します。
+     *
+     */
+    composeURLbyPageTitle(PAGE_TITLE,URL=window.location.href){
+        /*[URLの例]
+        【ローカル環境】
+
+        http://127.0.0.1:5500/parent-file-name/page-title.html
+
+        https://yamatoaita.github.io/ホームページ名.github.io/
+        https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html?user_index=user
+
+        →ローカル環境とgithub.pageで条件分岐しよう。
+        　ローカル環境の場合は正規表現で置換
+        　github.pageの場合は末尾に/サブページ名.htmlを追加
+        */
+
+        if(URL.match(/github/)){
+            /*
+            github.pageはhttps://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html
+            という形式だ。
+            PAGE_TITLEがホームページ名と一緒になることはない。↓
+
+            ✖ https://yamatoaita.github.io/INDEX.github.io/INDEX.html
+
+            そのため、FUNDATIONAL_URLのホームページ名とPAGE_TITLEが違う名前か確かめないとね。
+
+            〇https://yamatoaita.github.io/scheduler.github.io/adjust.html
+
+            ↓↓
+            なので、Step１：基本となるFUNDATIONAL_URLを作る
+            例：https://yamatoaita.github.io/INDEX.github.io
+
+            Step2：その後、extractHtmlTitleでホームページ名を抽出。
+            Step3:ホームページ名とPAGE_TITLEを比較
+            */
+
+            const FUNDATIONAL_URL =  URL.match(/https:\/{2}yamatoaita.github.io\/[\w-]*\.github\.io/)[0];
+            //→https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.htmlが
+            //→https://yamatoaita.github.io/ホームページ名.github.ioに編集される。
+
+            const FUNDATIONAL_PAGE_NAME = this.extractHtmlTitle(FUNDATIONAL_URL);
+            if(FUNDATIONAL_PAGE_NAME == PAGE_TITLE){
+                alert("ホームページ名とPAGE_TITLEは違う名前でなければなりません。\n〇　https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html")
+            }else{
+                var composedURL = `${URL}/${PAGE_TITLE}.html`
+                return composedURL;
+            }
+
+        }else{
+            const TRIMPED_URL = URL.replace(/\/$/,"");
+            const SPLITED_URL = TRIMPED_URL.split("/");
+            var   poped_item = SPLITED_URL.pop();
+            SPLITED_URL[SPLITED_URL.length] = poped_item.replace(/[^\.]*/,PAGE_TITLE)
+
+            var composedURL = SPLITED_URL.join("/");
+            return composedURL;
+        }
+
+
+
+
+    }
+
+    /**
+     * @description ホームページのURLを作り返します。ローカル環境とgithub.pageでは処理を変えています。どちらもURLはwindow.location.hrefで取得したものを使用します。
+     * @param {*} homePageTitle homePageTitleはローカル環境で使用します。デフォルトがindexです。github.pageにアップしたのちには読み込まれません。
+     * @returns 　http://127.0.0.1:5500/utils/index.htmlやhttps://yamatoaita.github.io/scheduler.github.ioのように返します。
+     */
+    returnHomePageURL(homePageTitle="index"){
+        const URL =window.location.href;
+
+
+        if(URL.match(/github/)){
+            var homePageURL =  URL.match(/https:\/{2}yamatoaita.github.io\/[\w-]*\.github\.io/)[0];
+            return homePageURL;
+        }else{
+            var homePageURL = this.composeURLbyPageTitle(homePageTitle,URL);
+            return homePageURL;
+        }
+    }
+}
+
+// ----- utils.js END -----
 
 class Application{
     constructor(){
-        console.log("in constructor");
         //➀Elementを取得
         this.INPUT_SINCE          = document.getElementById("dateSince");
         this.SPAN_SINCE           = document.getElementById("explainDateSince");
@@ -19,10 +399,6 @@ class Application{
         //このbooleanを使用して、サイトがログイン状態か
         //ログアウト状態かを管理したい。
 
-        this.INDEX_HTML = "https://yamatoaita.github.io/linktree.github.io/";
-        this.LOGIN_HTML = "https://yamatoaita.github.io/linktree.github.io/login.html";
-        this.SETTING_HTML = "https://yamatoaita.github.io/linktree.github.io/setting.html";
-        console.log("set menay things");
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyBYf6N1S-oMoHvJFGmLvlJ9t1WBsiSy2XQ",
             authDomain: "x-linktree.firebaseapp.com",
@@ -32,48 +408,42 @@ class Application{
             messagingSenderId: "207042084073",
             appId: "1:207042084073:web:e305b706b65b4d6e718478"
         };
-        console.log(FIREBASE_CONFIG);
-        console.log("definate firebase config");
-        this.FIREBASE_APP = new FirebaseFunctions(FIREBASE_CONFIG);
-        console.log("installed firebase app");
+        this.FirebaseApp = new FirebaseFunctions(FIREBASE_CONFIG);
+
+        this.HtmlFunction = new HtmlFunction();
+        
         this.executeByURL();
-        console.log("fin exexute by url");
+
     }
     //--------------------------------------------------------------------------
     //[common]
     executeByURL(){
-        console.log("in execute by url");
         const URL = window.location.href;
-        
+        var page = URL.split("/").pop();
+        page = page.replace(".html","");
 
         this.printFirebaseInfo();
-        console.log("done print firebase info");
         
-        
-        if(URL == this.INDEX_HTML ){
-    
-            console.log("in execute By URL IF clause. bef all func");
+        if(page == "linktree" || page == "index"){
             this.setLastUsedOption();
 
-            console.log("fin set last used option");
             this.setRadioEvent();//ラジオボタンの選択状況に応じて、elementを表示させる
-            console.log(" fin set radio event");
+
             this.setButtonEvent();//確定ボタンのイベントを設定
-            console.log("fin set button event");
+
             this.setA_Event();//リンククリック時の色変化を設定
-            console.log("fin set a event");
+
             this.setMenuEvent();
-            console.log("fin set menu event");
+
             this.setMenuBtnsEvent();
-            console.log("fin set menu btns event");
 
             this.applyLoginIfNotExpire();
-            console.log("fin apply login if not expire")
-        }else if(URL == this.LOGIN_HTML){
+
+        }else if(page == "login"){
             this.setLoginEvent();
             this.setHomeBtnEvent();
 
-        }else if(URL == this.SETTING_HTML){
+        }else if(page == "setting"){
             this.setComboboxEvent();
             this.setBtnsEvent();
             this.setHomeBtnEvent();
@@ -85,8 +455,7 @@ class Application{
     }
 
     async printFirebaseInfo(){
-        const INFO = await this.FIREBASE_APP.downloadData("data/info");
-        console.log("is it visible?");
+        const INFO = await this.FirebaseApp.downloadData("data/info");
         console.log(INFO);
     }
 
@@ -95,35 +464,28 @@ class Application{
         BTN.addEventListener("click",()=>{
             const RAW_SPAN_TEXT = document.getElementById("headerUserName").textContent;
             this.uploadLoginDataBySpan(RAW_SPAN_TEXT);//○○さん　ようこそ　という形式のSPANタグテキスト
-            window.location.href = this.INDEX_HTML;
+            window.location.href = this.HtmlFunction.returnHomePageURL();
         });
     }
 
     async applyLoginIfNotExpire(){
         var status = false;
-        const LOGIN_DATA = await this.FIREBASE_APP.downloadExpiringCookie();
+        const LOGIN_DATA = await this.FirebaseApp.downloadExpiringCookie();
         const USER_NAME = LOGIN_DATA.user_name;
 
         if(USER_NAME){
             const URL = window.location.href;
             //有効期限付きデータにログインしたユーザー名があるときはログイン
             this.__displayUserName(USER_NAME);
-            const FORMATED_URL = this.__formatURL(URL);
-            console.log(FORMATED_URL)
-            if(FORMATED_URL == this.INDEX_HTML){
+
+            if(URL == this.HtmlFunction.returnHomePageURL()){
                 this.__changeLoginBtnDisplay();
                 this.__applyUserSetting(USER_NAME);
-            }else if(FORMATED_URL == this.SETTING_HTML){
+            }else if(URL == this.HtmlFunction.composeURLbyPageTitle("setting")){
                 this.__setSearchDateOption();
             }
             this.isLogin = true;
         }
-    }
-
-    __formatURL(URL){
-        //local環境の場合：http://127.0.0.1:5500/X_LinkTree/index.html
-        const FORMATED_URL = URL.replace(/.*\//, '');
-        return FORMATED_URL;
     }
 
     __displayUserName(USER_NAME){
@@ -157,13 +519,13 @@ class Application{
 
     uploadLoginData(USER_NAME){
         const DATA = {"user_name" : USER_NAME}
-        this.FIREBASE_APP.uploadExpiringCookie(DATA);
+        this.FirebaseApp.uploadExpiringCookie(DATA);
     }
 
     uploadLoginDataBySpan(SPAN_TEXT){
         const USER_NAME = SPAN_TEXT.replace("さん　ようこそ","");
         const DATA = {"user_name" : USER_NAME}
-        this.FIREBASE_APP.uploadExpiringCookie(DATA);
+        this.FirebaseApp.uploadExpiringCookie(DATA);
     }
 
     //-----------------------------------------------------------------
@@ -241,7 +603,7 @@ class Application{
         const RAW_SPAN_TEXT = document.getElementById("headerUserName").textContent;
         const USER_NAME = RAW_SPAN_TEXT.replace("さん　ようこそ","");
        
-        this.FIREBASE_APP.uploadData(`data/users/${USER_NAME}/SearchOption`,DICT_OPTIONS)
+        this.FirebaseApp.uploadData(`data/users/${USER_NAME}/SearchOption`,DICT_OPTIONS)
         console.log(`data/users/${USER_NAME}/SearchOption  was sent`)
     }
 
@@ -279,7 +641,7 @@ class Application{
     async __setSearchDateOption(){
         const USER_NAME = this.__extractUserNameBySpan()
         console.log(USER_NAME);
-        const USER_SEARCH_OPTION = await this.FIREBASE_APP.downloadData(`data/users/${USER_NAME}/SearchOption`);
+        const USER_SEARCH_OPTION = await this.FirebaseApp.downloadData(`data/users/${USER_NAME}/SearchOption`);
         console.log(USER_SEARCH_OPTION);
 
         const COMBO_BOX = document.getElementById("combo");
@@ -312,7 +674,7 @@ class Application{
 
         BTN_LOGIN.addEventListener("click", async ()=>{
             const USER_NAME = INPUT_USER_NAME.value;
-            const LOGIN_DATA =  await this.FIREBASE_APP.downloadData(`data/users/${USER_NAME}`);
+            const LOGIN_DATA =  await this.FirebaseApp.downloadData(`data/users/${USER_NAME}`);
             if(LOGIN_DATA){
                 //pass
             }else{
@@ -321,18 +683,18 @@ class Application{
 
             this.uploadLoginData(USER_NAME);
             
-            var isGoingSettingDatas= await this.FIREBASE_APP.downloadData("data/isGoingSetting")
+            var isGoingSettingDatas= await this.FirebaseApp.downloadData("data/isGoingSetting")
             const IS_GOING_SETTING =isGoingSettingDatas.boolean; 
 
             if(IS_GOING_SETTING){
                 isGoingSettingDatas = {
                                         "boolean": true,
                                       };
-                this.FIREBASE_APP.uploadData("data/isGoingSetting",IS_GOING_SETTING);
-                window.location.href = this.SETTING_HTML;
+                this.FirebaseApp.uploadData("data/isGoingSetting",IS_GOING_SETTING);
+                window.location.href = this.HtmlFunction.composeURLbyPageTitle("setting");
 
             }else{
-                window.location.href = this.INDEX_HTML;      
+                window.location.href = this.HtmlFunction.returnHomePageURL();      
             }
 
                   
@@ -341,7 +703,7 @@ class Application{
     }
 
     __signUpUser(USER_NAME){
-        this.FIREBASE_APP.uploadData(`data/users/${USER_NAME}`,{});
+        this.FirebaseApp.uploadData(`data/users/${USER_NAME}`,{});
 
     }
 
@@ -350,8 +712,7 @@ class Application{
     //--------------------------------------------------------------------------
     //[index.html]
     async setLastUsedOption(){
-        const DATA = await this.FIREBASE_APP.downloadData("local_data");
-
+        const DATA = await this.FirebaseApp.downloadData("local_data");
         this.SINCE_DATE.value = DATA["since"];
         this.UNTIL_DATE.value = DATA["until"];
         
@@ -380,7 +741,7 @@ class Application{
             radioButton = document.getElementById("radioSinceUntil");
             radioButton.checked = true;
         }else{
-            alert(`error:${OPTION}`)
+            //alert(`error:${OPTION}`)
         }
     }
     __hideRadioExtraElems(){
@@ -479,7 +840,7 @@ class Application{
                                 "until" : this.UNTIL_DATE.value,
                                 "option": OPTION
                              }
-        this.FIREBASE_APP.uploadData("local_data",DICT_OPTIONS)
+        this.FirebaseApp.uploadData("local_data",DICT_OPTIONS)
     }
 
 
@@ -578,28 +939,28 @@ class Application{
         }else{
             //ログイン処理のために　ログイン画面へ遷移
             const DATA = {"empty":""}
-            this.FIREBASE_APP.uploadExpiringCookie(DATA);
-            window.location.href = this.LOGIN_HTML;
+            this.FirebaseApp.uploadExpiringCookie(DATA);
+            window.location.href = this.HtmlFunction.composeURLbyPageTitle("login");
         }
     }
     __setBtnSettingEvent(BTN_SETTING){
         if(this.isLogin){
             const RAW_SPAN_TEXT = document.getElementById("headerUserName").textContent;
             this.uploadLoginDataBySpan(RAW_SPAN_TEXT);
-            window.location.href = this.SETTING_HTML;
+            window.location.href = this.HtmlFunction.composeURLbyPageTitle("setting");
         }else{
             const IS_GOING_SETTING_DATAS = {
                                             "boolean":true
                                             };
-            this.FIREBASE_APP.uploadData("data/isGoingSetting",IS_GOING_SETTING_DATAS);
-            window.location.href = this.LOGIN_HTML;
+            this.FirebaseApp.uploadData("data/isGoingSetting",IS_GOING_SETTING_DATAS);
+            window.location.href = this.HtmlFunction.composeURLbyPageTitle("login");
         }
         
     }
 
    
     async __applyUserSetting(USER_NAME){
-        const USER_SEARCH_OPTION = await this.FIREBASE_APP.downloadData(`data/users/${USER_NAME}/SearchOption`);
+        const USER_SEARCH_OPTION = await this.FirebaseApp.downloadData(`data/users/${USER_NAME}/SearchOption`);
         const USER_HASHTAG_OPTION = "";//TODO : HASHTAGの設定を実装したら追加する   
         console.log(USER_SEARCH_OPTION);
 
