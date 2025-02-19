@@ -419,12 +419,8 @@ class Application{
     //[common]
     executeByURL(){
         const URL = window.location.href;
-        var page = URL.split("/").pop();
-        page = page.replace(".html","");
-
-        this.printFirebaseInfo();
         
-        if(page == "linktree" || page == "index"){
+        if(URL == this.HtmlFunction.returnHomePageURL()){
             this.setLastUsedOption();
 
             this.setRadioEvent();//ラジオボタンの選択状況に応じて、elementを表示させる
@@ -439,11 +435,11 @@ class Application{
 
             this.applyLoginIfNotExpire();
 
-        }else if(page == "login"){
+        }else if(URL == this.HtmlFunction.composeURLbyPageTitle("login")){
             this.setLoginEvent();
             this.setHomeBtnEvent();
 
-        }else if(page == "setting"){
+        }else if(URL == this.HtmlFunction.composeURLbyPageTitle("setting")){
             this.setComboboxEvent();
             this.setBtnsEvent();
             this.setHomeBtnEvent();
