@@ -673,6 +673,7 @@ class Application{
 
 
         BTN_LOGIN.addEventListener("click", async ()=>{
+            console.log("it is in login btn");
             const USER_NAME = INPUT_USER_NAME.value;
             const LOGIN_DATA =  await this.FirebaseApp.downloadData(`data/users/${USER_NAME}`);
             if(LOGIN_DATA){
@@ -691,9 +692,11 @@ class Application{
                                         "boolean": true,
                                       };
                 this.FirebaseApp.uploadData("data/isGoingSetting",IS_GOING_SETTING);
+                console.log(` it is setting conditional branch; url is ${this.HtmlFunction.composeURLbyPageTitle("setting")}`)
                 window.location.href = this.HtmlFunction.composeURLbyPageTitle("setting");
 
             }else{
+                console.log(` it is normal conditional branch; url is ${this.HtmlFunction.returnHomePageURL()}`)
                 window.location.href = this.HtmlFunction.returnHomePageURL();      
             }
 
