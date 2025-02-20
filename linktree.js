@@ -1,5 +1,4 @@
 
-
 // ----- utils.js START -----
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
 import { getDatabase, ref, push,  get, set, onChildAdded, remove, onChildRemoved }
@@ -306,59 +305,96 @@ class HtmlFunction{
 
         http://127.0.0.1:5500/parent-file-name/page-title.html
 
-        https://yamatoaita.github.io/ホームページ名.github.io/
-        https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html?user_index=user
+        （例1）https://yamatoaita.github.io/ホームページ名.github.io/
+        （例2）https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html
+        （例3）https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html?user_index=user
 
         →ローカル環境とgithub.pageで条件分岐しよう。
         　ローカル環境の場合は正規表現で置換
-        　github.pageの場合は末尾に/サブページ名.htmlを追加
+
+        [github.pageの場合]
+        github.pageの場合は末尾に/サブページ名.htmlを追加しよう。
+        ↓↓
+        （例1）〇　https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html
+        （例2）✖　https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html/サブページ名.html
+        （例3）✖  https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html?user_index=user/サブページ名.html
+
+        もしURLがすでにサブページ出会った場合は違う処理をしよう。サブページを抽出し、PAGE_TITLEに置換する。
+
+
+        github.pageはhttps://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html
+        という形式だ。
+        PAGE_TITLEがホームページ名と一緒になることはない。↓
+
+        ✖ https://yamatoaita.github.io/INDEX.github.io/INDEX.html
+
+        そのため、FUNDATIONAL_URLのホームページ名とPAGE_TITLEが違う名前か確かめないとね。
+
+        〇https://yamatoaita.github.io/scheduler.github.io/adjust.html
         */
 
-        if(URL.match(/github/)){
-            /*
-            github.pageはhttps://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html
-            という形式だ。
-            PAGE_TITLEがホームページ名と一緒になることはない。↓
 
-            ✖ https://yamatoaita.github.io/INDEX.github.io/INDEX.html
+        /*
+        1.ローカル環境かgithub.pageか判断し、条件分岐する　： if(URL.match(/github/)){}
 
-            そのため、FUNDATIONAL_URLのホームページ名とPAGE_TITLEが違う名前か確かめないとね。
+            Local.1. 正規表現を使って、page-title.htmlの部分を置換する。
+            　　　　　（例）http://127.0.0.1:5500/utils/index.html
+            　　　　　　　→ http://127.0.0.1:5500/utils/login.html
 
-            〇https://yamatoaita.github.io/scheduler.github.io/adjust.html
+            Github.1. ホームページ名のみの基本URLを抽出する : URL.match(/https:\/{2}yamatoaita.github.io\/[\w-]*\.github\.io\//)[0];
+            　　　　　（例1）https://yamatoaita.github.io/ホームページ名.github.io/
+                        → https://yamatoaita.github.io/ホームページ名.github.io/
 
-            ↓↓
-            なので、Step１：基本となるFUNDATIONAL_URLを作る
-            例：https://yamatoaita.github.io/INDEX.github.io
+                    （例2）https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html
+                        → https://yamatoaita.github.io/ホームページ名.github.io/
 
-            Step2：その後、extractHtmlTitleでホームページ名を抽出。
-            Step3:ホームページ名とPAGE_TITLEを比較
-            */
+                    （例3）https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html?user_index=user/サブページ名.html
+                        → https://yamatoaita.github.io/ホームページ名.github.io/
 
-            const FUNDATIONAL_URL =  URL.match(/https:\/{2}yamatoaita.github.io\/[\w-]*\.github\.io/)[0];
-            //→https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.htmlが
-            //→https://yamatoaita.github.io/ホームページ名.github.ioに編集される。
+            Github.2. ホームページ名と変更したいPAGE_TITLEが同じか判断し、条件分岐する
+            　　　　　　合致した場合は無効なURLとなるため、alertでお知らせする。
+
+            Github.3.　現在のＵＲＬはサブページか判断して、条件分岐する。
+            　　　　
+                Github.4.hp.   ＵＲＬの末尾にPAGE_TITLE.htmlを加える。
+
+                Github.4.subp. ＵＲＬ（https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html）
+                　　　　　　　　 のサブページ名をPAGE_TITLEに置換する。
+        */
+
+        if(URL.match(/github/)){//1
+
+            const FUNDATIONAL_URL =  URL.match(/https:\/{2}yamatoaita.github.io\/[\w-]*\.github\.io\//)[0];
+            //                                  https:  \ yamatoaita.github.io \ hp-name\.github.io \
+            //Github.1.
+            //→https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html   から
+            //→https://yamatoaita.github.io/ホームページ名.github.io/　　　　　　　　　  が抽出される。
 
             const FUNDATIONAL_PAGE_NAME = this.extractHtmlTitle(FUNDATIONAL_URL);
-            if(FUNDATIONAL_PAGE_NAME == PAGE_TITLE){
+            if(FUNDATIONAL_PAGE_NAME == PAGE_TITLE){ // Github.2.
                 alert("ホームページ名とPAGE_TITLEは違う名前でなければなりません。\n〇　https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html")
+                //無効なURL✖　 https://yamatoaita.github.io/ホームページ名.github.io/ホームページ名.html
             }else{
-                var composedURL = `${URL}/${PAGE_TITLE}.html`
-                return composedURL;
+                if(URL.match(/\.html$/)){//Github.3. サブページ名にのみ　末尾に.htmlがつくのです。
+                    var composedURL = URL.replace(/\/[\w]*\.html$/,`/${PAGE_TITLE}.html`);
+                    //                             /subpage.html  , / page-title  .html　　　に置換
+                    //Github.4.subp
+                    return composedURL;
+                }else{
+                    var composedURL = `${URL}${PAGE_TITLE}.html`;
+                    //                ・・・/   page-title .html　　　末尾に加える
+                    //Github.4.hp.
+
+                    return composedURL;
+                }
             }
 
         }else{
-            const TRIMPED_URL = URL.replace(/\/$/,"");
-            const SPLITED_URL = TRIMPED_URL.split("/");
-            var   poped_item = SPLITED_URL.pop();
-            SPLITED_URL[SPLITED_URL.length] = poped_item.replace(/[^\.]*/,PAGE_TITLE)
-
-            var composedURL = SPLITED_URL.join("/");
+            var composedURL = URL.replace(/\/([\w]*)\.html$/,`/${PAGE_TITLE}\.html`)
+            //　　　　　　　　　　　　　　　　/  target .html　,　/  page-title .html
+            //Local.1.
             return composedURL;
         }
-
-
-
-
     }
 
     /**
@@ -381,6 +417,8 @@ class HtmlFunction{
 }
 
 // ----- utils.js END -----
+
+
 
 class Application{
     constructor(){
@@ -673,7 +711,6 @@ class Application{
 
 
         BTN_LOGIN.addEventListener("click", async ()=>{
-            console.log("it is in login btn");
             const USER_NAME = INPUT_USER_NAME.value;
             const LOGIN_DATA =  await this.FirebaseApp.downloadData(`data/users/${USER_NAME}`);
             if(LOGIN_DATA){
@@ -692,11 +729,11 @@ class Application{
                                         "boolean": true,
                                       };
                 this.FirebaseApp.uploadData("data/isGoingSetting",IS_GOING_SETTING);
-                console.log(` it is setting conditional branch; url is ${this.HtmlFunction.composeURLbyPageTitle("setting")}`)
+              
                 window.location.href = this.HtmlFunction.composeURLbyPageTitle("setting");
 
             }else{
-                console.log(` it is normal conditional branch; url is ${this.HtmlFunction.returnHomePageURL()}`)
+
                 window.location.href = this.HtmlFunction.returnHomePageURL();      
             }
 
