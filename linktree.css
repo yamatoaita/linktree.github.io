@@ -213,13 +213,46 @@ table {
     width: 50%;
 
     background-color: rgb(251, 198, 255);
+    
 }
 .setting-column-cell{
     border : 3px solid #b1b1b1;
     background-color: rgb(242, 176, 247);
+    
 }
 .setting-row-cell{
     border : 3px solid #b1b1b1;
+    
+}
+
+.setting-info{
+    display: none;
+    
+    text-indent: 20px ;
+    font-size: 25px;
+    padding-top: 10px;
+
+    width: 95%;
+    height: 50px;
+    margin:  0px 2vw 10px;
+    background-color: #ffffff;
+    border-top: 3px solid #b1b1b1; /* 青色の枠線 */
+    border-left : 10px solid #0014c4; /* 青色の枠線 */
+    border-right : 3px solid #b1b1b1; /* 青色の枠線 */
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2); /* 影を追加 */
+    border-radius: 5px; /* 角を丸くする */
+}
+
+.setting-column-cell__hashtag{
+    border-right : 3px solid #b1b1b1; /* 青色の枠線 */
+    width: 50px;
+}
+.setting-row-cell__title{
+    border-right : 3px solid #b1b1b1; /* 青色の枠線 */
+    background-color: rgb(246, 207, 250);
+}
+.setting-row-cell__data{
+    background-color: #fde3ff;
 }
 
 /* ログインコンテナ */

@@ -450,21 +450,23 @@ class Application{
         this.FirebaseApp = new FirebaseFunctions(FIREBASE_CONFIG);
 
         this.HtmlFunction = new HtmlFunction();
+
+        if(this.__isInSetting()){//設定ページにいたら
+            this.transitioningHP_IfInvalid();
+            //クッキーが有効期限外の時にHPに遷移する
+        }
         
         this.executeByURL();
 
     }
     //--------------------------------------------------------------------------
     //[common]
-    executeByURL(){
-        const URL = window.location.href;
-        console.log(`it is 2nd line of exexuteByURL, and URL is ${URL},HomePageURL is ${this.HtmlFunction.returnHomePageURL()},\n
-        and login page is ${this.HtmlFunction.composeURLbyPageTitle("login")}, and setting page is ${this.HtmlFunction.composeURLbyPageTitle("setting")}`);
-        
-        if(URL == this.HtmlFunction.returnHomePageURL()){
-            console.log("in home page conditinoal branch; start");
-            this.setLastUsedOption();
+    
 
+    async executeByURL(){
+        const URL = window.location.href;
+
+        if(URL == this.HtmlFunction.returnHomePageURL()){
             this.setRadioEvent();//ラジオボタンの選択状況に応じて、elementを表示させる
 
             this.setButtonEvent();//確定ボタンのイベントを設定
@@ -474,9 +476,14 @@ class Application{
             this.setMenuEvent();
 
             this.setMenuBtnsEvent();
+            console.log("bef conditional branch");
+            if(await this.__isCookieValid()){
+                this.applyLoginIfNotExpire();
+            }else{
+                this.setLastUsedOption();
+            }
 
-            this.applyLoginIfNotExpire();
-            console.log("in home page conditinoal branch; done");
+            
         }else if(URL == this.HtmlFunction.composeURLbyPageTitle("login")){
             this.setLoginEvent();
             this.setHomeBtnEvent();
@@ -485,10 +492,10 @@ class Application{
             this.setComboboxEvent();
             this.setBtnsEvent();
             this.setHomeBtnEvent();
-
-            this.applyLoginIfNotExpire();
-
-         
+      
+            this.applyLoginIfNotExpire();         
+        }else{
+            alert("error:無効なURLです。in executeByURL")
         }
     }
 
@@ -506,21 +513,55 @@ class Application{
         });
     }
 
-    async applyLoginIfNotExpire(){
-        var status = false;
+    async transitioningHP_IfInvalid(){
+        const IS_COOKIE_VALID = await this.__isCookieValid();
+        if(IS_COOKIE_VALID){
+            //pass
+            console.log(`is valid : ${IS_COOKIE_VALID}`);
+        }else{
+            window.location.href = this.HtmlFunction.returnHomePageURL();
+            console.log(`is invalid : ${IS_COOKIE_VALID}`);
+        }
+    }
+    __isInSetting(){
+        const SETTING_URL = this.HtmlFunction.composeURLbyPageTitle("setting");
+        if(window.location.href == SETTING_URL){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    /**
+     * @description 保存したクッキーが有効期限内か判定します。
+     * 有効期限内であれば、trueではなくログイン中のユーザー名が返ります。
+     * 有効期限外であれば、false
+     */
+    async __isCookieValid(){
         const LOGIN_DATA = await this.FirebaseApp.downloadExpiringCookie();
         const USER_NAME = LOGIN_DATA.user_name;
+        return USER_NAME;
+    }
+
+    async applyLoginIfNotExpire(){
+        const USER_NAME =  await this.__isCookieValid();
 
         if(USER_NAME){
             const URL = window.location.href;
             //有効期限付きデータにログインしたユーザー名があるときはログイン
             this.__displayUserName(USER_NAME);
 
-            if(URL == this.HtmlFunction.returnHomePageURL()){
+            if(URL == this.HtmlFunction.returnHomePageURL()){//HPならば
                 this.__changeLoginBtnDisplay();
-                this.__applyUserSetting(USER_NAME);
-            }else if(URL == this.HtmlFunction.composeURLbyPageTitle("setting")){
+
+                //ユーザー設定が反映される前にdoButtonEventが実行されていた。
+                //そのため、awaitで完全に反映させてから行うことにした。
+                await this.__applyUserSetting(USER_NAME);
+
+                this.__doButtonEvent();
+            }else if(URL == this.HtmlFunction.composeURLbyPageTitle("setting")){//設定ページならば
                 this.__setSearchDateOption();
+                this.__setCellsValue();
             }
             this.isLogin = true;
         }
@@ -573,15 +614,17 @@ class Application{
         const BTN_SEARCH_HASHTAGS = document.getElementById("btnSearcHashtags");
 
         BTN_SEARCH_DATE.addEventListener("click",()=>{
-            this.__updateSearchDate();
+            this.__uploadSetting_SearchDate();
+            this.__showFinishInfo("search_date");
         })
 
         BTN_SEARCH_HASHTAGS.addEventListener("click",()=>{
-            
+            this.__uploadSetting_Hashtag();
+            this.__showFinishInfo("hashtags")
         })
     }
 
-    __updateSearchDate(){
+    __uploadSetting_SearchDate(){
         const COMBO_BOX = document.getElementById("combo");
         const RAW_COMBO_VALUE = COMBO_BOX.value;
         const SPLITED_DATA = RAW_COMBO_VALUE.split("|");
@@ -638,11 +681,9 @@ class Application{
             "duration":DURATION
         }
 
-        const RAW_SPAN_TEXT = document.getElementById("headerUserName").textContent;
-        const USER_NAME = RAW_SPAN_TEXT.replace("さん　ようこそ","");
-       
+
+        const USER_NAME = this.__extractUserNameBySpan();
         this.FirebaseApp.uploadData(`data/users/${USER_NAME}/SearchOption`,DICT_OPTIONS)
-        console.log(`data/users/${USER_NAME}/SearchOption  was sent`)
     }
 
     __composeFormatedDate(DATE){
@@ -699,6 +740,50 @@ class Application{
             COMBO_BOX.value = "custom|since~until";
             this.__Combobox__showCustomElems();
             this.__setRadioExtraElemsDate(USER_SEARCH_OPTION.since,USER_SEARCH_OPTION.until);
+        }
+    }
+
+    async __showFinishInfo(SETTING_CONTENT){
+        const SETTING_INFO = document.getElementById("setting-info");
+        SETTING_INFO.style.display = "none";
+        
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        if(      SETTING_CONTENT=="search_date"){
+            SETTING_INFO.textContent = "✅日程範囲を更新しました"
+            SETTING_INFO.style.display = "block";
+        }else if(SETTING_CONTENT == "hashtags"){
+            SETTING_INFO.textContent = "✅ハッシュタグを更新しました"
+            SETTING_INFO.style.display = "block";
+        }else{
+            alert("存在しない設定です。in __showFinishInfo")
+        }
+    }
+
+    __uploadSetting_Hashtag(){
+        var hashtag_data = [];
+        for(let cnt=1; cnt<5; cnt++){
+            var cell = document.getElementById(`hashtag${cnt}Title`);
+            hashtag_data.push(cell.textContent);
+            console.log(cnt),
+            console.table(hashtag_data);
+        }
+
+        const USER_NAME = this.__extractUserNameBySpan();
+        this.FirebaseApp.uploadData(`data/users/${USER_NAME}/Hashtags`,hashtag_data);
+    }
+
+    async __setCellsValue(){
+        const USER_NAME = this.__extractUserNameBySpan();
+        var HASHTAG_DATA = [""];
+        HASHTAG_DATA = await this.FirebaseApp.downloadData(`data/users/${USER_NAME}/Hashtags`);
+        console.table(HASHTAG_DATA);
+
+        let cnt = 1;
+        for(const HASHTAG of HASHTAG_DATA){
+            var cell = document.getElementById(`hashtag${cnt}Title`);
+            cell.textContent = HASHTAG;
+            cnt += 1;
         }
     }
 
@@ -825,7 +910,7 @@ class Application{
             
                 var HASHTAG    = document.getElementById(`hashtag${i}Title`).textContent;
                 HASHTAG        = HASHTAG.replace("#","%23");
-
+                
                 var LINK_CELL         = document.getElementById(`hashtag${i}LINK`);
                 LINK_CELL.href        = `https://x.com/search?q=(${HASHTAG})&src=typed_query&f=live`;
                 LINK_CELL.textContent = `https://x.com/search?q=(${HASHTAG})&src=typed_query&f=live`;
@@ -864,6 +949,7 @@ class Application{
             
                 var HASHTAG    = document.getElementById(`hashtag${i}Title`).textContent;
                 HASHTAG        = HASHTAG.replace("#","%23");
+                console.log(HASHTAG);
 
                 var LINK_CELL         = document.getElementById(`hashtag${i}LINK`);
                 LINK_CELL.href        = `https://x.com/search?f=live&q=(${HASHTAG})%20until%3A${UNTIL_VALUE}%20since%3A${SINCE_VALUE}&src=typed_query&f=live`;
@@ -974,7 +1060,6 @@ class Application{
             this.__changeLoginBtnDisplay();
             //ログアウトしたら、ボタンをログインに　ラベルを書き換える。
             this.__hideUserName();
-
             this.isLogin = false;
         }else{
             //ログイン処理のために　ログイン画面へ遷移
@@ -998,6 +1083,13 @@ class Application{
         
     }
 
+    __setHastags(HASHTAG_DATA){
+       
+        for(var cnt = 1; cnt < 5; cnt++){
+            var cell = document.getElementById(`hashtag${cnt}Title`);
+            cell.textContent = `#${HASHTAG_DATA[cnt-1]}`;
+        }
+    }
    
     async __applyUserSetting(USER_NAME){
         const USER_SEARCH_OPTION = await this.FirebaseApp.downloadData(`data/users/${USER_NAME}/SearchOption`);
@@ -1006,6 +1098,10 @@ class Application{
 
         this.__selectRadioButton(USER_SEARCH_OPTION.option);    
         this.__setRadioExtraElemsDate(USER_SEARCH_OPTION.since,USER_SEARCH_OPTION.until);    
+
+        var hashtagData = [];
+        hashtagData = await this.FirebaseApp.downloadData(`data/users/${USER_NAME}/Hashtags`);
+        this.__setHastags(hashtagData);
     }
 }
 
