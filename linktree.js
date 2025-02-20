@@ -1,4 +1,5 @@
 
+
 // ----- utils.js START -----
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
 import { getDatabase, ref, push,  get, set, onChildAdded, remove, onChildRemoved }
@@ -370,7 +371,7 @@ class HtmlFunction{
 
 
         if(URL.match(/github/)){
-            var homePageURL =  URL.match(/https:\/{2}yamatoaita.github.io\/[\w-]*\.github\.io/\/)[0];
+            var homePageURL =  URL.match(/https:\/{2}yamatoaita.github.io\/[\w-]*\.github\.io\//)[0];
             return homePageURL;
         }else{
             var homePageURL = this.composeURLbyPageTitle(homePageTitle,URL);
