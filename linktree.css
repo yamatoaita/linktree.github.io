@@ -111,6 +111,15 @@ table {
 .row-cell__a{
     text-align: center;
 }
+.column-cell__overlay-image {
+    position: absolute;
+    top: 5px; /* 位置調整 */
+    left: 50%;
+    transform: translateX(-50%); /* 水平方向の中央揃え */
+    width: 100%; /* 画像サイズ */
+    height: 100%;
+    
+}
 
 @media(max-width: 480px){
 }
