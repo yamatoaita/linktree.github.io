@@ -653,21 +653,21 @@ class Application{
             until = this.__composeFormatedDate(nextDay);
         
         }else if(DURATION == "week"){
-            since = this.__composeFormatedDate(TODAY);
-
             var week = new Date();
-            week.setDate(week.getDate()+7);
-            until = this.__composeFormatedDate(week);
+            week.setDate(week.getDate()-7);
+            since = this.__composeFormatedDate(week);
+            
+            until = this.__composeFormatedDate(TODAY);
         
         }else if(DURATION == "month"){
-            since = this.__composeFormatedDate(TODAY);
-
             var month = new Date();
-            month.setMonth(month.getMonth() + 1);
+            month.setMonth(month.getMonth() - 1);
             if(month.getDate() !== TODAY.getDate()){
                 month.setDate(0);//月末
             }
-            until = this.__composeFormatedDate(month);
+            since = this.__composeFormatedDate(month);
+            
+            until = this.__composeFormatedDate(TODAY);
 
         }else if(DURATION == "custom"){
             since = this.SINCE_DATE.value;
@@ -1093,9 +1093,6 @@ class Application{
    
     async __applyUserSetting(USER_NAME){
         const USER_SEARCH_OPTION = await this.FirebaseApp.downloadData(`data/users/${USER_NAME}/SearchOption`);
-        const USER_HASHTAG_OPTION = "";//TODO : HASHTAGの設定を実装したら追加する   
-        console.log(USER_SEARCH_OPTION);
-
         this.__selectRadioButton(USER_SEARCH_OPTION.option);    
         this.__setRadioExtraElemsDate(USER_SEARCH_OPTION.since,USER_SEARCH_OPTION.until);    
 
