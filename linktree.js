@@ -594,10 +594,10 @@ class PreLoader{
         const AnimateFunc = new AnimateFunctions();
         const UtilsFunc   = new UtilsFunctions();
 
-        //AnimateFunc.fadeOut(this.#PRELOADER_MODAL);
-        //await UtilsFunc.sleep(1000);
-        //this.#PRELOADER_MODAL.remove();
-        //this.#STYLE.remove();
+        AnimateFunc.fadeOut(this.#PRELOADER_MODAL);
+        await UtilsFunc.sleep(1000);
+        this.#PRELOADER_MODAL.remove();
+        this.#STYLE.remove();
     }
 }
 // ----- utils.js END -----
@@ -700,7 +700,7 @@ class Application{
         this.AnimateFunction.fadeIn(LABO_LOGO,0.04);
 
         LABO_LOGO.addEventListener("click",()=>{
-            window.location.href = "https://sites.google.com/tfu-us.tfu.ac.jp/syuubunndou/home";
+            window.location.href = "https://sites.google.com/view/syuubunndou/%E3%83%9B%E3%83%BC%E3%83%A0";
         })
     }
 
