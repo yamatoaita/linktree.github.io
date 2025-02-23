@@ -17,7 +17,17 @@ html, body {
     height: auto; /* 縦幅は自動調整 */
     display: block; /* 余計な隙間をなくす */
   }
-  
+
+  .header__labo-logo{
+    display: none;
+    position: absolute;  /* 親要素 .header を基準に配置 */
+    right: 150px;  /* 左端に配置 */
+    bottom: 0;  /* 下端に配置 */
+    width: 100px; /* ボタンサイズ（調整可） */
+    height: auto;
+
+    margin: 0px 50px 0px;
+  }
   .header__btn {
     position: absolute;  /* 親要素 .header を基準に配置 */
     right: 0;  /* 左端に配置 */
@@ -34,7 +44,7 @@ html, body {
     background-color: rgba(255, 255, 255, 0.386);
 
     position: absolute;  /* 親要素 .header を基準に配置 */
-    right: 200px;
+    left: 30px;
     bottom: 0;  /* 下端に配置 */
   }
   
@@ -335,3 +345,6 @@ h2 {
 .register-link a:hover {
     text-decoration: underline;
 }
+
+
+

@@ -258,6 +258,22 @@ uploadExpiringCookie関数は仕様上、Dictionary型を渡すことを推奨�
 
 }
 
+class UtilsFunctions{
+    constructor(){
+
+    }
+
+    /**
+     * @abstract 注意事項:sleepを使う際は使用する関数にasyncをつけ、await sleepとして使います。
+     * @param {*} MS 
+     * @returns 
+     */
+    sleep(MS){
+        console.log(`注意事項\nsleepを使う際は使用する関数にasyncをつけ、await sleepとして使います。`)
+        return new Promise(resolve => setTimeout(resolve,MS));
+    }
+}
+
 class HtmlFunction{
     constructor(){
 
@@ -416,8 +432,122 @@ class HtmlFunction{
     }
 }
 
-// ----- utils.js END -----
+class PreLoader{ 
+    #HTML
+    #STYLE
+    constructor(){
 
+        // 1. プリローダーHTMLを追加
+        this.#HTML = document.createElement("div");
+        this.#HTML.className = "preloader";
+        document.body.prepend(this.#HTML);
+    }
+
+
+    /**
+     * @abstract 滝のようにLOADTINGの文字が流れます
+     * @description BACKGROUND_COLORでモダールの背景色を指定
+     * ANIMATE_COLOR_PATTERNはリスト型に３色の色を指定。アニメ指定した文字色になる
+     * BASIC_FONT_COLORで非アニメ指定文字の色を指定
+     */
+    charWaterflow({
+        BACKGROUND_COLOR = `rgba(0, 0, 0, 0.8)`,
+        ANIMATE_COLOR_PATTERN = [`#0088cc`,`#e23069`,`#F0E300`],
+        BASIC_FONT_COLOR = `rgb(255, 255, 255)`
+    }={}){
+
+        //1. HTMLを追加
+        this.#HTML.innerHTML = `
+            <img src="labo-logo.png" class="labo-logo">
+            <div class="loading">
+                <span>L</span>
+                <span class="animate">O</span>
+                <span class="animate">A</span>
+                <span class="animate">D</span>
+                <span>I</span>
+                <span>N</span>
+                <span>G</span>
+            </div>
+        `;
+
+        //２. CSSを追加
+        this.#STYLE = document.createElement("style");
+        var   basicStyleContext =  `
+        .preloader {
+            position: fixed;
+            top: 0px;
+            background-color: ${BACKGROUND_COLOR};
+            width: 100%;
+            height: 100%;
+            z-index: 99;
+        }
+        .labo-logo { 
+            position: relative;
+            top: 30%;
+            margin: auto;
+            display: block;
+            width: auto;
+        }
+        @keyframes spin {
+            0% { top: 0; }
+            50% { top: 100%; opacity: 0; }
+            51% { top: -100%; }
+            100% { top: 0; opacity: 1; }
+        }
+
+        .loading {
+            position: fixed;
+            width: 100%;
+            top: 60%;
+            text-align: center;
+          }
+          
+          .loading span {
+            color: ${BASIC_FONT_COLOR};
+            font-size: 30px;
+          }
+          
+          .loading .animate {
+            position: absolute;
+            top: 0;
+          }       
+        `;
+        var   animateStyleContext = `
+            .loading span:nth-child(2) {
+                color: ${ANIMATE_COLOR_PATTERN[0]};
+                animation: spin 1.5s linear infinite;
+                -webkit-animation: spin 1.5s linear infinite;
+            }
+
+            .loading span:nth-child(3) {
+                margin-left: 25px;
+                color: ${ANIMATE_COLOR_PATTERN[1]};
+                animation: spin 1s linear infinite;
+                -webkit-animation: spin 1s linear infinite;
+            }
+
+            .loading span:nth-child(4) {
+                margin-left: 50px;
+                color:${ANIMATE_COLOR_PATTERN[2]};
+                animation: spin 1.25s linear infinite;
+                -webkit-animation: spin 1.25s linear infinite;
+            }
+
+            .loading span:nth-child(5) {
+                padding-left: 77px;
+            }
+        `;
+        this.#STYLE.textContent = basicStyleContext + animateStyleContext;
+        document.head.appendChild(this.#STYLE);
+
+    }
+
+    closePreLoader(){
+        this.#HTML.remove();
+        this.#STYLE.remove();
+    }
+}
+// ----- utils.js END -----
 
 
 class Application{
@@ -451,6 +581,8 @@ class Application{
 
         this.HtmlFunction = new HtmlFunction();
 
+        this.UtilsFunction = new UtilsFunctions();
+
         if(this.__isInSetting()){//設定ページにいたら
             this.transitioningHP_IfInvalid();
             //クッキーが有効期限外の時にHPに遷移する
@@ -476,13 +608,22 @@ class Application{
             this.setMenuEvent();
 
             this.setMenuBtnsEvent();
-            console.log("bef conditional branch");
+
+            const PRELOADER =  new PreLoader();
+            PRELOADER.charWaterflow();
+
             if(await this.__isCookieValid()){
                 this.applyLoginIfNotExpire();
             }else{
                 this.setLastUsedOption();
             }
 
+            await this.UtilsFunction.sleep(1000);
+            PRELOADER.closePreLoader();
+
+            //ヘッダーにラボロゴを表示
+            this.setLaboLogo();
+            
             
         }else if(URL == this.HtmlFunction.composeURLbyPageTitle("login")){
             this.setLoginEvent();
@@ -497,6 +638,15 @@ class Application{
         }else{
             alert("error:無効なURLです。in executeByURL")
         }
+    }
+
+    setLaboLogo(){
+        const LABO_LOGO = document.getElementById("headerLaboLogo");
+        LABO_LOGO.style.display = "block";
+
+        LABO_LOGO.addEventListener("click",()=>{
+            window.location.href = "https://sites.google.com/tfu-us.tfu.ac.jp/syuubunndou/home";
+        })
     }
 
     async printFirebaseInfo(){
@@ -555,7 +705,7 @@ class Application{
                 this.__changeLoginBtnDisplay();
 
                 //ユーザー設定が反映される前にdoButtonEventが実行されていた。
-                //そのため、awaitで完全に反映させてから行うことにした。
+                //そのため、awaitで完全に反映させてから行うことにした。　
                 await this.__applyUserSetting(USER_NAME);
 
                 this.__doButtonEvent();
@@ -653,21 +803,21 @@ class Application{
             until = this.__composeFormatedDate(nextDay);
         
         }else if(DURATION == "week"){
+            since = this.__composeFormatedDate(TODAY);
+
             var week = new Date();
-            week.setDate(week.getDate()-7);
-            since = this.__composeFormatedDate(week);
-            
-            until = this.__composeFormatedDate(TODAY);
+            week.setDate(week.getDate()+7);
+            until = this.__composeFormatedDate(week);
         
         }else if(DURATION == "month"){
+            since = this.__composeFormatedDate(TODAY);
+
             var month = new Date();
-            month.setMonth(month.getMonth() - 1);
+            month.setMonth(month.getMonth() + 1);
             if(month.getDate() !== TODAY.getDate()){
                 month.setDate(0);//月末
             }
-            since = this.__composeFormatedDate(month);
-            
-            until = this.__composeFormatedDate(TODAY);
+            until = this.__composeFormatedDate(month);
 
         }else if(DURATION == "custom"){
             since = this.SINCE_DATE.value;
@@ -1093,6 +1243,9 @@ class Application{
    
     async __applyUserSetting(USER_NAME){
         const USER_SEARCH_OPTION = await this.FirebaseApp.downloadData(`data/users/${USER_NAME}/SearchOption`);
+        const USER_HASHTAG_OPTION = "";//TODO : HASHTAGの設定を実装したら追加する   
+        console.log(USER_SEARCH_OPTION);
+
         this.__selectRadioButton(USER_SEARCH_OPTION.option);    
         this.__setRadioExtraElemsDate(USER_SEARCH_OPTION.since,USER_SEARCH_OPTION.until);    
 
