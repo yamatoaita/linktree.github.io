@@ -432,15 +432,63 @@ class HtmlFunction{
     }
 }
 
+class AnimateFunctions{
+    constructor(){
+
+    }
+
+    /**
+     * @abstract フェードスピードの初期値は0.05です。
+     * @param {*} ELEMENT 
+     * @param {*} SPEED 
+     */
+    fadeIn(ELEMENT, SPEED=0.05){
+        var opacity = 0;//透明度
+        ELEMENT.style.opacity = 0;
+        ELEMENT.style.display = "block";
+
+        const FADE_EFFECT = setInterval( () =>{
+
+                                                if(opacity < 1){//非　透明でなければ
+                                                    opacity += SPEED;
+                                                    ELEMENT.style.opacity = opacity;
+                                                }else{
+                                                    clearInterval(FADE_EFFECT);
+                                                }
+
+                                               }, 50);//0050ms秒ごとに実行
+    }
+
+    /**
+     * @abstract フェードスピードの初期値は0.05です。
+     * @param {*} ELEMENT 
+     * @param {*} SPEED 
+     */
+    fadeOut(ELEMENT,SPEED=0.05){
+        var opacity = 1;//透明度
+        const FADE_EFFECT = setInterval( () =>{
+
+                                                if(opacity > 0){//完全に透明でなければ
+                                                    opacity -= SPEED;
+                                                    ELEMENT.style.opacity = opacity;
+                                                }else{
+                                                    clearInterval(FADE_EFFECT);
+                                                    ELEMENT.style.display = "none";
+                                                }
+
+                                               }, 50);//0050ms秒ごとに実行
+    }
+}
+
 class PreLoader{ 
-    #HTML
+    #PRELOADER_MODAL
     #STYLE
     constructor(){
 
         // 1. プリローダーHTMLを追加
-        this.#HTML = document.createElement("div");
-        this.#HTML.className = "preloader";
-        document.body.prepend(this.#HTML);
+        this.#PRELOADER_MODAL = document.createElement("div");
+        this.#PRELOADER_MODAL.className = "preloader";
+        document.body.prepend(this.#PRELOADER_MODAL);
     }
 
 
@@ -457,8 +505,8 @@ class PreLoader{
     }={}){
 
         //1. HTMLを追加
-        this.#HTML.innerHTML = `
-            <img src="labo-logo.png" class="labo-logo">
+        this.#PRELOADER_MODAL.innerHTML = `
+            <img src="labo-logo.png" class="labo-logo" id="labo-logo">
             <div class="loading">
                 <span>L</span>
                 <span class="animate">O</span>
@@ -496,9 +544,9 @@ class PreLoader{
         }
 
         .loading {
-            position: fixed;
+            position: relative;
+            top: 32%;
             width: 100%;
-            top: 60%;
             text-align: center;
           }
           
@@ -542,9 +590,14 @@ class PreLoader{
 
     }
 
-    closePreLoader(){
-        this.#HTML.remove();
-        this.#STYLE.remove();
+    async closePreLoader(){
+        const AnimateFunc = new AnimateFunctions();
+        const UtilsFunc   = new UtilsFunctions();
+
+        //AnimateFunc.fadeOut(this.#PRELOADER_MODAL);
+        //await UtilsFunc.sleep(1000);
+        //this.#PRELOADER_MODAL.remove();
+        //this.#STYLE.remove();
     }
 }
 // ----- utils.js END -----
@@ -577,11 +630,13 @@ class Application{
             messagingSenderId: "207042084073",
             appId: "1:207042084073:web:e305b706b65b4d6e718478"
         };
-        this.FirebaseApp = new FirebaseFunctions(FIREBASE_CONFIG);
+        this.FirebaseApp     = new FirebaseFunctions(FIREBASE_CONFIG);
 
-        this.HtmlFunction = new HtmlFunction();
+        this.HtmlFunction    = new HtmlFunction();
 
-        this.UtilsFunction = new UtilsFunctions();
+        this.UtilsFunction   = new UtilsFunctions();
+
+        this.AnimateFunction = new AnimateFunctions();
 
         if(this.__isInSetting()){//設定ページにいたら
             this.transitioningHP_IfInvalid();
@@ -642,7 +697,7 @@ class Application{
 
     setLaboLogo(){
         const LABO_LOGO = document.getElementById("headerLaboLogo");
-        LABO_LOGO.style.display = "block";
+        this.AnimateFunction.fadeIn(LABO_LOGO,0.04);
 
         LABO_LOGO.addEventListener("click",()=>{
             window.location.href = "https://sites.google.com/tfu-us.tfu.ac.jp/syuubunndou/home";
