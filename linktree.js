@@ -1,4 +1,5 @@
 
+
 // ----- utils.js START -----
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
 import { getDatabase, ref, push,  get, set, onChildAdded, remove, onChildRemoved }
@@ -265,8 +266,8 @@ class UtilsFunctions{
 
     /**
      * @abstract 注意事項:sleepを使う際は使用する関数にasyncをつけ、await sleepとして使います。
-     * @param {*} MS 
-     * @returns 
+     * @param {*} MS
+     * @returns
      */
     sleep(MS){
         console.log(`注意事項\nsleepを使う際は使用する関数にasyncをつけ、await sleepとして使います。`)
@@ -380,11 +381,13 @@ class HtmlFunction{
 
         if(URL.match(/github/)){//1
 
-            const FUNDATIONAL_URL =  URL.match(/https:\/{2}yamatoaita.github.io\/[\w-]*\.github\.io\//)[0];
-            //                                  https:  \ yamatoaita.github.io \ hp-name\.github.io \
+            const FUNDATIONAL_URL =  URL.match(/https:\/{2}yamatoaita.github.io\/[/w/.]*/)[0];
+            //                                  https:  \ yamatoaita.github.io \ hp-name\
             //Github.1.
-            //→https://yamatoaita.github.io/ホームページ名.github.io/サブページ名.html   から
-            //→https://yamatoaita.github.io/ホームページ名.github.io/　　　　　　　　　  が抽出される。
+            //→https://yamatoaita.github.io/ホームページ名/サブページ名.html   から
+            //→https://yamatoaita.github.io/ホームページ名/　　　　　　　　　  が抽出される。
+            //HP名には２パターンがある。　NAME/ と NAME.github.io/ である。
+
 
             const FUNDATIONAL_PAGE_NAME = this.extractHtmlTitle(FUNDATIONAL_URL);
             if(FUNDATIONAL_PAGE_NAME == PAGE_TITLE){ // Github.2.
@@ -419,11 +422,14 @@ class HtmlFunction{
      * @returns 　http://127.0.0.1:5500/utils/index.htmlやhttps://yamatoaita.github.io/scheduler.github.ioのように返します。
      */
     returnHomePageURL(homePageTitle="index"){
-        const URL =window.location.href;
-
+        const URL = window.location.href;
 
         if(URL.match(/github/)){
-            var homePageURL =  URL.match(/https:\/{2}yamatoaita.github.io\/[\w-]*\.github\.io\//)[0];
+            var homePageURL =  URL.match(/https:\/{2}yamatoaita.github.io\/[\w\.]*\//)[0];
+            //                            https://   yamatoaita.github.io// NAME  //
+
+            //➡https://yamatoaita.github.io/linktree/index.html　　が
+            //  https://yamatoaita.github.io/linktree/　　　　　　　になります
             return homePageURL;
         }else{
             var homePageURL = this.composeURLbyPageTitle(homePageTitle,URL);
@@ -439,8 +445,8 @@ class AnimateFunctions{
 
     /**
      * @abstract フェードスピードの初期値は0.05です。
-     * @param {*} ELEMENT 
-     * @param {*} SPEED 
+     * @param {*} ELEMENT
+     * @param {*} SPEED
      */
     fadeIn(ELEMENT, SPEED=0.05){
         var opacity = 0;//透明度
@@ -461,8 +467,8 @@ class AnimateFunctions{
 
     /**
      * @abstract フェードスピードの初期値は0.05です。
-     * @param {*} ELEMENT 
-     * @param {*} SPEED 
+     * @param {*} ELEMENT
+     * @param {*} SPEED
      */
     fadeOut(ELEMENT,SPEED=0.05){
         var opacity = 1;//透明度
@@ -480,7 +486,7 @@ class AnimateFunctions{
     }
 }
 
-class PreLoader{ 
+class PreLoader{
     #PRELOADER_MODAL
     #STYLE
     constructor(){
@@ -529,7 +535,7 @@ class PreLoader{
             height: 100%;
             z-index: 99;
         }
-        .labo-logo { 
+        .labo-logo {
             position: relative;
             top: 30%;
             margin: auto;
@@ -549,16 +555,16 @@ class PreLoader{
             width: 100%;
             text-align: center;
           }
-          
+
           .loading span {
             color: ${BASIC_FONT_COLOR};
             font-size: 30px;
           }
-          
+
           .loading .animate {
             position: absolute;
             top: 0;
-          }       
+          }
         `;
         var   animateStyleContext = `
             .loading span:nth-child(2) {
@@ -601,7 +607,6 @@ class PreLoader{
     }
 }
 // ----- utils.js END -----
-
 
 class Application{
     constructor(){
@@ -691,7 +696,10 @@ class Application{
       
             this.applyLoginIfNotExpire();         
         }else{
-            alert("error:無効なURLです。in executeByURL")
+            alert("error:無効なURLです。in executeByURL");
+            alert(`error message: URL is ${URL}, and composed HP-URL is ${this.HtmlFunction.returnHomePageURL()}. composed NAME-URL is like ${this.HtmlFunction.composeURLbyPageTitle("login")}`);
+            console.log(`error message: URL is ${URL}, and composed HP-URL is ${this.HtmlFunction.returnHomePageURL()}. composed NAME-URL is like ${this.HtmlFunction.composeURLbyPageTitle("login")}`);
+            
         }
     }
 
@@ -858,21 +866,21 @@ class Application{
             until = this.__composeFormatedDate(nextDay);
         
         }else if(DURATION == "week"){
-            since = this.__composeFormatedDate(TODAY);
-
             var week = new Date();
-            week.setDate(week.getDate()+7);
-            until = this.__composeFormatedDate(week);
-        
+            week.setDate(week.getDate()-7);
+            since = this.__composeFormatedDate(week);
+
+            until = this.__composeFormatedDate(TODAY);
         }else if(DURATION == "month"){
-            since = this.__composeFormatedDate(TODAY);
+            
 
             var month = new Date();
-            month.setMonth(month.getMonth() + 1);
+            month.setMonth(month.getMonth() - 1);
             if(month.getDate() !== TODAY.getDate()){
                 month.setDate(0);//月末
             }
-            until = this.__composeFormatedDate(month);
+            since = this.__composeFormatedDate(month);
+            until = this.__composeFormatedDate(TODAY);
 
         }else if(DURATION == "custom"){
             since = this.SINCE_DATE.value;
